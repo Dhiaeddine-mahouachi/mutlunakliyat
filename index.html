@@ -1366,11 +1366,7 @@
           <h3>Ofis & Büro Taşıma</h3>
           <p>İşinizin aksamaması için arşiv, masa ve elektronik donanımlarınız yüksek güvenlik standartlarında taşınır.</p>
         </div>
-        <div class="service-card reveal">
-          <div class="service-icon">🏗️</div>
-          <h3>Asansörlü Nakliyat</h3>
-          <p>Yüksek katlı binalarda eşyaların zarar görmesini önleyen hidrolik modüler dış cephe asansör sistemleri.</p>
-        </div>
+        
         <div class="service-card reveal">
           <div class="service-icon">📦</div>
           <h3>Parça Eşya Taşıma</h3>
@@ -1555,24 +1551,19 @@
       const currentScrollY = window.scrollY;
       
       /* ─── SCROLL DRIVEN TRUCK ANIMATION ENGINE ─── */
-      // We only execute scroll movement on desktop views to keep mobile presentation pristine
-      if (window.innerWidth > 768) {
-        // Limits tracking animation strictly to the hero frame range (0 to 650px down)
-        const animationRange = Math.min(currentScrollY, 650);
-        
-        // Calculate translation translation distance and the rotational degree of the tires
-        const truckMoveX = animationRange * 0.45; // Speed multiplier for horizontal movement
-        const wheelRotate = animationRange * 1.8;  // Angular speed for wheel rotation
-        
-        // Push values to CSS transformations instantly
+      if (truck) {
+        const isMobile = window.innerWidth <= 768;
+
+        // Desktop: truck moves smoothly across the hero section
+        // Mobile: truck starts slightly left and moves to the right while scrolling
+        const animationRange = Math.min(currentScrollY, isMobile ? 420 : 650);
+        const truckMoveX = isMobile ? animationRange * 0.34 : animationRange * 0.45;
+        const wheelRotate = isMobile ? animationRange * 2.4 : animationRange * 1.8;
+
         truck.style.transform = `translateX(${truckMoveX}px)`;
         wheels.forEach(w => {
           w.style.transform = `rotate(${wheelRotate}deg)`;
         });
-      } else {
-        // Fallback default state reset for mobile viewports
-        truck.style.transform = 'none';
-        wheels.forEach(w => w.style.transform = 'none');
       }
 
       /* Header and Link tracking handling */
