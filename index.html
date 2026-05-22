@@ -418,7 +418,35 @@
       border-radius: 16px 24px 12px 12px;
       box-shadow: 0 25px 50px rgba(0,0,0,0.4);
       will-change: transform;
-      transition: transform 0.1s linear; /* Tiny transition smooths out micro-stutters */
+      transition: filter .18s ease;
+      transform-origin: center bottom; /* lets the truck tilt naturally while moving */
+    }
+
+
+    .animated-van::after {
+      content: "";
+      position: absolute;
+      left: -34px;
+      top: 38px;
+      width: 42px;
+      height: 34px;
+      opacity: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent) 0 4px / 100% 3px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255,107,22,0.75), transparent) 0 15px / 100% 3px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent) 0 27px / 80% 3px no-repeat;
+      transform: translateX(-6px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+    }
+
+    .animated-van.is-moving {
+      filter: drop-shadow(0 24px 26px rgba(255,107,22,0.16));
+    }
+
+    .animated-van.is-moving::after {
+      opacity: 1;
+      transform: translateX(-16px);
     }
 
     .animated-van::before {
@@ -1546,28 +1574,81 @@
     });
 
     let lastScrollY = window.scrollY;
+    let truckX = 0;
+    let targetTruckX = 0;
+    let wheelDeg = 0;
+    let targetWheelDeg = 0;
+    let truckTilt = 0;
+    let targetTilt = 0;
+    let truckBounce = 0;
+    let scrollSpeed = 0;
+    let isTruckAnimating = false;
+    let truckMoveTimer;
+
+    function updateTruckMotion() {
+      if (!truck) return;
+
+      // Smooth easing instead of harsh jumpy scroll movement
+      truckX += (targetTruckX - truckX) * 0.14;
+      wheelDeg += (targetWheelDeg - wheelDeg) * 0.18;
+      truckTilt += (targetTilt - truckTilt) * 0.12;
+
+      const isMobile = window.innerWidth <= 768;
+      const bouncePower = isMobile ? 4 : 2;
+      truckBounce = Math.sin(wheelDeg * Math.PI / 180) * bouncePower * Math.min(scrollSpeed / 18, 1);
+
+      truck.style.transform = `translate3d(${truckX}px, ${truckBounce}px, 0) rotate(${truckTilt}deg)`;
+      wheels.forEach(w => {
+        w.style.transform = `rotate(${wheelDeg}deg)`;
+      });
+
+      if (Math.abs(targetTruckX - truckX) > 0.2 || Math.abs(targetWheelDeg - wheelDeg) > 0.5 || Math.abs(targetTilt - truckTilt) > 0.05) {
+        requestAnimationFrame(updateTruckMotion);
+      } else {
+        isTruckAnimating = false;
+      }
+    }
+
+    function setTruckTarget(currentScrollY, velocity) {
+      if (!truck) return;
+
+      const isMobile = window.innerWidth <= 768;
+      const maxRange = isMobile ? 560 : 650;
+      const animationRange = Math.min(Math.max(currentScrollY, 0), maxRange);
+
+      // Mobile gets a longer and more visible travel path
+      targetTruckX = isMobile ? animationRange * 0.42 : animationRange * 0.45;
+      targetWheelDeg = isMobile ? animationRange * 3.4 : animationRange * 1.9;
+
+      scrollSpeed = Math.min(Math.abs(velocity), 28);
+      targetTilt = velocity > 1 ? -2.4 : velocity < -1 ? 2.4 : 0;
+
+      truck.classList.toggle('is-moving', scrollSpeed > 1);
+      clearTimeout(truckMoveTimer);
+      truckMoveTimer = setTimeout(() => {
+        targetTilt = 0;
+        scrollSpeed = 0;
+        truck.classList.remove('is-moving');
+        if (!isTruckAnimating) {
+          isTruckAnimating = true;
+          requestAnimationFrame(updateTruckMotion);
+        }
+      }, 120);
+
+      if (!isTruckAnimating) {
+        isTruckAnimating = true;
+        requestAnimationFrame(updateTruckMotion);
+      }
+    }
 
     window.addEventListener('scroll', () => {
       const currentScrollY = window.scrollY;
+      const velocity = Math.min(Math.max(currentScrollY - lastScrollY, -25), 25);
       
       /* ─── SCROLL DRIVEN TRUCK ANIMATION ENGINE ─── */
-      if (truck) {
-        const isMobile = window.innerWidth <= 768;
-
-        // Desktop: truck moves smoothly across the hero section
-        // Mobile: truck starts slightly left and moves to the right while scrolling
-        const animationRange = Math.min(currentScrollY, isMobile ? 420 : 650);
-        const truckMoveX = isMobile ? animationRange * 0.34 : animationRange * 0.45;
-        const wheelRotate = isMobile ? animationRange * 2.4 : animationRange * 1.8;
-
-        truck.style.transform = `translateX(${truckMoveX}px)`;
-        wheels.forEach(w => {
-          w.style.transform = `rotate(${wheelRotate}deg)`;
-        });
-      }
+      setTruckTarget(currentScrollY, velocity);
 
       /* Header and Link tracking handling */
-      const velocity = Math.min(Math.max(currentScrollY - lastScrollY, -25), 25);
       document.documentElement.style.setProperty('--scroll-velocity', velocity);
       lastScrollY = currentScrollY;
 
@@ -1598,7 +1679,13 @@
         header.style.padding = "20px 0";
         header.style.background = "rgba(12,12,16,0.75)";
       }
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      setTruckTarget(window.scrollY, 0);
     });
+
+    setTruckTarget(window.scrollY, 0);
 
     function sendWhatsApp() {
       const phone = "905315585406";
