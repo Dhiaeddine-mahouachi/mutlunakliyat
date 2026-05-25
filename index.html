@@ -1706,8 +1706,52 @@
         `Nereden nereye: ${distance}%0A` +
         `Mesaj: ${message}%0A%0A` +
         `Fiyat teklifi almak istiyorum.`;
-      window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
-    }
+      window.open(`https://wa.me/${phone}?text=${text}`, "_// Create the script element;
+const schemaScript = document.createElement('script');
+schemaScript.type = 'application/ld+json';
+
+// Define the 24/7 Delivery Service data
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "DeliveryService",
+  "name": "Mutlu Nakliyat",
+  "image": "http://mutlunakliyat.site/logo.png", 
+  "@id": "http://mutlunakliyat.site",
+  "url": "http://mutlunakliyat.site",
+  "telephone": "+905315585406",
+  "priceRange": "$$",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Haseki Kadın Sokak No 5/b",
+    "addressLocality": "Fatih",
+    "addressRegion": "İstanbul",
+    "postalCode": "34096",
+    "addressCountry": "TR"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 41.0082, 
+    "longitude": 28.9784
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "opens": "00:00",
+    "closes": "23:59"
+  }
+};
+
+// Convert the object to a string and append it to the document head
+schemaScript.text = JSON.stringify(schemaData);
+document.head.appendChild(schemaScript);
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
